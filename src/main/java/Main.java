@@ -10,34 +10,34 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            merge(readFromFile());
+            System.out.println(merge(readFromFile()));
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
 
     /**
-     * Merges Base64 encoded content to a single PDF file
-     * @param content
+     * Merges Base64 encoded content to a single PDF file and returns it Base64 encoded
+     * @param content base64 strings of images / pdfs
      * @throws IOException
      */
-    public static void merge(String[] content) throws IOException {
-        // Merger for merging PDF files
-        PDFMergerUtility merger = new PDFMergerUtility();
-
+    public static String merge(String[] content) throws IOException {
+        ArrayList<PDDocument> documents = new ArrayList<>();
         for (String item:content) {
             InputStream decoded = null;
             InputStream targetStream = new ByteArrayInputStream((item.getBytes()));
             // JVBER means the file is a PDF
             if (item.substring(0, 5).equals("JVBER")) {
                 decoded = java.util.Base64.getDecoder().wrap(targetStream);
-                merger.addSource(decoded);
+                PDDocument doc = PDDocument.load(decoded);
+                documents.add(doc);
             } else {
                 // Pictures PNG/JPG
                 // New document
@@ -61,16 +61,21 @@ public class Main {
                 // Creates inputstream readable by the merger
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 document.save(baos);
-                merger.addSource(new ByteArrayInputStream(baos.toByteArray()));
+                documents.add(document);
             }
         }
-        // Merges and saves to file location
-        merger.setDestinationFileName("c:\\test\\merged.pdf");
-        try {
-            merger.mergeDocuments();
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Experimental
+        PDDocument allDocs = new PDDocument();
+        for (int d = 0; d < documents.size();d++) {
+            PDDocument doc = documents.get(d);
+            for (int p = 0; p < doc.getPages().getCount();p++) {
+                allDocs.addPage(doc.getPage(p));
+            }
         }
+        allDocs.save("c:\\test\\merged2.pdf");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        allDocs.save(baos);
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
     public static String[] readFromFile() {
@@ -87,6 +92,8 @@ public class Main {
             lines.add(line);
             System.out.println(line);
         }
+
+        System.out.println("Finished reading lines from file");
 
         String[] arr = lines.toArray(new String[0]);
         return arr;
