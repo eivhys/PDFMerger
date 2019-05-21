@@ -40,10 +40,13 @@ class Main {
                 documents.add(doc);
             } else {
                 // Pictures PNG/JPG
+
                 // New document
                 PDDocument document = new PDDocument();
+
                 // New page
                 PDPage page = new PDPage(PDRectangle.A4);
+
                 document.addPage(page);
                 // Loads image
                 byte[] imageByte;
@@ -59,13 +62,16 @@ class Main {
                         PDPageContentStream.AppendMode.APPEND,
                         false
                 );
+
                 // Img ratio to make the img scale to fit page
                 float ratio = image.getHeight() > image.getWidth() ?
                          page.getMediaBox().getHeight() / image.getHeight() :
                          page.getMediaBox().getWidth() / image.getWidth();
+
                 // 1/20 margin to create some breathing room
                 float marginX = image.getWidth() / 20;
                 float marginY = image.getHeight() / 20;
+
                 // Draw image with margin to make it look nice and ratio to make it scale to fill page
                 //noinspection IntegerDivisionInFloatingPointContext
                 contentStream.drawImage(pdImageXObject,
@@ -81,6 +87,7 @@ class Main {
                 documents.add(document);
             }
         }
+
         // Merges all pages of documents
         PDDocument allDocs = new PDDocument();
         for (PDDocument doc : documents) {
@@ -88,10 +95,12 @@ class Main {
                 allDocs.addPage(doc.getPage(p));
             }
         }
+
         // Saves locally
         allDocs.save("c:\\test\\merged2.pdf");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         allDocs.save(baos);
+
         // Returns base64 string of merged documents
         return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
@@ -99,12 +108,15 @@ class Main {
     private static String[] readFromFile() {
         String fileName = "C:\\Users\\eivindh\\IdeaProjects\\PDFMerger\\docs.txt";
         Scanner sc = null;
+
         try {
             sc = new Scanner(new File(fileName));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
         List<String> lines = new ArrayList<>();
+
         //noinspection ConstantConditions
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
