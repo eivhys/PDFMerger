@@ -2,6 +2,7 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import sun.misc.BASE64Decoder;
@@ -43,7 +44,7 @@ public class Main {
                 // New document
                 PDDocument document = new PDDocument();
                 // New page
-                PDPage page = new PDPage();
+                PDPage page = new PDPage(PDRectangle.A4);
                 document.addPage(page);
                 // Adds image to page
                 BufferedImage image = null;
@@ -54,8 +55,17 @@ public class Main {
                 image = ImageIO.read(bis);
                 bis.close();
                 PDImageXObject  pdImageXObject = LosslessFactory.createFromImage(document, image);
-                PDPageContentStream contentStream = new PDPageContentStream(document, page, true, false);
-                contentStream.drawImage(pdImageXObject, 200, 300, image.getWidth() / 2, image.getHeight() / 2);
+                PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
+                float ratio = image.getHeight() > image.getWidth() ?
+                         page.getMediaBox().getHeight() / image.getHeight() :
+                         page.getMediaBox().getWidth() / image.getWidth();
+                int marginX = image.getWidth() / 20;
+                int marginY = image.getHeight() / 20;
+                contentStream.drawImage(pdImageXObject,
+                        image.getWidth() > 200 ? marginX / 2 : 200 + marginX / 2 - image.getWidth() / 2,
+                        image.getHeight() > 300 ? marginY / 2 : 300 + marginY / 2 - image.getHeight() / 2,
+                        image.getWidth() * ratio - marginX,
+                        image.getHeight() * ratio - marginY);
                 contentStream.close();
 
                 // Creates inputstream readable by the merger
